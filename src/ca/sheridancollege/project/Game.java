@@ -5,54 +5,91 @@
  */
 package ca.sheridancollege.project;
 
-import java.util.ArrayList;
+import java.util.Scanner;
 
 /**
  * The class that models your game. You should create a more specific child of this class and instantiate the methods
  * given.
  *
- * @author dancye
- * @author Paul Bonenfant Jan 2020
+ * @author CYBER140
  */
-public abstract class Game {
 
-    private final String name;//the title of the game
-    private ArrayList<Player> players;// the players of the game
+public class Game {
+    private Deck deck;
+    private Player player;
+    private Dealer dealer;
 
-    public Game(String name) {
-        this.name = name;
-        players = new ArrayList();
+    public Game() {
+        deck = new Deck();
+        deck.shuffle();
+        dealer = new Dealer();
     }
 
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return name;
+    public void playGame() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter your name: ");
+        String name = scanner.nextLine();
+        player = new Player(name);
+
+        System.out.println("Welcome to Blackjack, " + player.getName() + "!");
+        initialDeal();
+
+        while (true) {
+            System.out.println("Your hand: " + player.getHand());
+            System.out.println("Your score: " + player.getHand().getScore());
+            if (player.getHand().isBust()) {
+                System.out.println("You busted! Dealer wins.");
+                break;
+            }
+            if (player.getHand().isBlackjack()) {
+                System.out.println("Blackjack! You win!");
+                break;
+            }
+
+            System.out.println("1. Hit");
+            System.out.println("2. Stand");
+            int choice = scanner.nextInt();
+            if (choice == 1) {
+                player.getHand().addCard(deck.drawCard());
+            } else if (choice == 2) {
+                playDealerTurn();
+                determineWinner();
+                break;
+            }
+        }
+        scanner.close();
     }
 
-    /**
-     * @return the players of this game
-     */
-    public ArrayList<Player> getPlayers() {
-        return players;
+    private void initialDeal() {
+        player.getHand().addCard(deck.drawCard());
+        player.getHand().addCard(deck.drawCard());
+        dealer.getHand().addCard(deck.drawCard());
+        dealer.getHand().addCard(deck.drawCard());
+
+        System.out.println("Dealer's face-up card: " + dealer.getHand().toString().split(",")[0]);
     }
 
-    /**
-     * @param players the players of this game
-     */
-    public void setPlayers(ArrayList<Player> players) {
-        this.players = players;
+    private void playDealerTurn() {
+        System.out.println("Dealer's hand: " + dealer.getHand());
+        while (dealer.getHand().getScore() < 17) {
+            dealer.getHand().addCard(deck.drawCard());
+            System.out.println("Dealer hits. Dealer's hand: " + dealer.getHand());
+        }
+        if (dealer.getHand().isBust()) {
+            System.out.println("Dealer busted! You win!");
+        }
     }
 
-    /**
-     * Play the game. This might be one method or many method calls depending on your game.
-     */
-    public abstract void play();
+    private void determineWinner() {
+        int playerScore = player.getHand().getScore();
+        int dealerScore = dealer.getHand().getScore();
 
-    /**
-     * When the game is over, use this method to declare and display a winning player.
-     */
-    public abstract void declareWinner();
-
-}//end class
+        if (dealerScore > 21 || playerScore > dealerScore) {
+            System.out.println("You win!");
+        } else if (playerScore < dealerScore) {
+            System.out.println("Dealer wins.");
+        } else {
+            System.out.println("It's a tie!");
+        }
+    }
+}
